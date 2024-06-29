@@ -25,6 +25,14 @@ jobs:
           sed -i '' "s/<string>$CURRENT_VERSION<\/string>/<string>$NEW_VERSION<\/string>/" info.plist
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
 
+      - name: Commit and push version update
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add info.plist
+          git commit -m "Bump version to ${{ steps.version.outputs.NEW_VERSION }} [skip ci]"
+          git push
+
       - name: Build Workflow
         run: |
           zip -r alfred-chathub.alfredworkflow . -x "*.git*" "*.github*"
