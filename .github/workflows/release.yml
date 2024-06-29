@@ -6,9 +6,11 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v3
-      
+      - uses: actions/checkout@v4
+
       - name: Update Version
         id: version
         run: |
@@ -21,28 +23,19 @@ jobs:
           fi
           sed -i '' "s/<string>$CURRENT_VERSION<\/string>/<string>$NEW_VERSION<\/string>/" info.plist
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
-      
+
       - name: Build Workflow
         run: |
-          zip -r workflow.alfredworkflow . -x "*.git*" "*.github*"
-      
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          zip -r alfred-chathub.alfredworkflow . -x "*.git*" "*.github*"
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.NEW_VERSION }}
-          release_name: Release v${{ steps.version.outputs.NEW_VERSION }}
+          name: Release v${{ steps.version.outputs.NEW_VERSION }}
+          files: alfred-chathub.alfredworkflow
           draft: false
           prerelease: false
-      
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./workflow.alfredworkflow
-          asset_name: workflow.alfredworkflow
-          asset_content_type: application/zip
